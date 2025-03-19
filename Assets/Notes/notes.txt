@@ -37,6 +37,27 @@ RPC
 > allow to pass requisitions of procedures
 from s -> c, c -> s, etc.
 
+> an RPC function must be within an NetworkBehaviour object
+> the function must be marked with the attribute Rpc e.g. [Rpc(SendTo.Server)]
+> the function must end with Rpc on the name e.g. ShowLogRpc();
+> script must be on a networkobject
+
 ========================
 NETWORK TRANSFORM
 ========================
+
+> Stuff that should sync movement need to have a network transform component
+> Sync as little data as possible to save on bandwidth. Servers are usually priced per bandwidth usage.
+ 
+========================
+PLAYERTYPES, LOCAL CLIENT ID
+========================
+
+> do not use strings to define types, enums instead
+> NetworkBehaviour have a bunch of callbacks: OnNetworkSpawn()
+
+> generally you can only pass value types to RPCS, to pass ref you need to network serialize the type.
+> you cannot also pass a NetworkObject but you do can pass a NetworkObjectReference type.
+
+
+
