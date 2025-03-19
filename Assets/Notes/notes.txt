@@ -1,0 +1,42 @@
+========================
+PACKAGES
+========================
+> Multiplayer Tools
+> Multiplayer Game Mode
+> Netcode for Game Objects
+
+========================
+GAME VISUAL MANAGER, SPAWN OBJECTS
+========================
+
+> better to have one parent GO with all sorts
+of logic
+> visuals separated in another child GO
+
+> scale and manipulate visuals in visuals GO
+> logic has 1,1,1 scale always
+
+> complex event syntax for decoupling
+> check out game manager code for more info
+
+> awake for init of myself
+> start for init that depend on others
+
+> network object component -> allow object
+to be spawnable over the network
+> register networkprefab to default network prefabs
+
+> only server can spawn objects at this time
+> also the position will not be updated in client
+only in server.
+
+========================
+RPC
+========================
+
+> allow to pass requisitions of procedures
+from s -> c, c -> s, etc.
+
+========================
+NETWORK TRANSFORM
+========================
