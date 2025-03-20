@@ -24,9 +24,11 @@ public class GameManager : NetworkBehaviour
     }
 
     private PlayerType _localPlayerType;
-    private PlayerType _currentPlayablePlayerType;
+    private NetworkVariable<PlayerType> _currentPlayablePlayerType = new NetworkVariable<PlayerType>(PlayerType.None,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public PlayerType LocalPlayerType { get => _localPlayerType; }
-    public PlayerType CurrentPlayablePlayerType { get => _currentPlayablePlayerType; }
+    public NetworkVariable<PlayerType> CurrentPlayablePlayerType { get => _currentPlayablePlayerType; }
+    private PlayerType[,] _playerTypeArray;
     
     public void Awake()
     {
@@ -39,6 +41,8 @@ public class GameManager : NetworkBehaviour
         {
             DestroyImmediate(this);
         }
+
+        _playerTypeArray = new PlayerType[3, 3];
     }
 
     public override void OnNetworkSpawn()
@@ -54,10 +58,15 @@ public class GameManager : NetworkBehaviour
 
         if (IsServer)
         {
-            _currentPlayablePlayerType = PlayerType.Cross;
-
+            CurrentPlayablePlayerType.Value = PlayerType.Cross;
+            
             NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         }
+
+        CurrentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
+        {
+            OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
+        };
     }
 
     public void NetworkManager_OnClientConnectedCallback(ulong obj)
@@ -72,16 +81,14 @@ public class GameManager : NetworkBehaviour
         OnGameStarted?.Invoke(this, EventArgs.Empty);
     }
     
-    [Rpc(SendTo.ClientsAndHost)]
-    private void TriggerOnCurrentPlayablePlayerTypeChangeRpc()
-    {
-        OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
-    }
-    
     [Rpc(SendTo.Server)]
     public void ClickedOnGridPositionRpc(PlayerType type, int x, int y)
     {
-        if (type != CurrentPlayablePlayerType) return;
+        if (type != CurrentPlayablePlayerType.Value) return;
+
+        if (_playerTypeArray[x, y] != PlayerType.None) return;
+
+        _playerTypeArray[x, y] = type;
         
         OnClickedOnGridPosition?.Invoke(this, new OnClickedOnGridPositionEventArgs
         {
@@ -90,17 +97,50 @@ public class GameManager : NetworkBehaviour
             y = y,
         });
 
-        switch (CurrentPlayablePlayerType)
+        switch (CurrentPlayablePlayerType.Value)
         {
             default:
             case PlayerType.Circle:
-                _currentPlayablePlayerType = PlayerType.Cross;
+                _currentPlayablePlayerType.Value = PlayerType.Cross;
                 break;
             case PlayerType.Cross:
-                _currentPlayablePlayerType = PlayerType.Circle;
+                _currentPlayablePlayerType.Value = PlayerType.Circle;
                 break;
         }
         
-        TriggerOnCurrentPlayablePlayerTypeChangeRpc();
+        TestWinner();
+    }
+
+    private bool TestWinnerLine(PlayerType aPlayerType, PlayerType bPlayerType, PlayerType cPlayerType)
+    {
+        return aPlayerType != PlayerType.None
+               && aPlayerType == bPlayerType &&
+               bPlayerType == cPlayerType;
+    }
+    private void WinGame()
+    {
+        Debug.Log("Winner");
+        _currentPlayablePlayerType.Value = PlayerType.None;
+    }
+
+    private void SpawnRow()
+    {
+        
+    }
+    private void TestWinner()
+    {
+        if (TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) ||
+            TestWinnerLine(_playerTypeArray[0, 0], _playerTypeArray[1, 0], _playerTypeArray[2, 0]) 
+            )
+        {
+            SpawnRow();
+            WinGame();
+        }
     }
 }

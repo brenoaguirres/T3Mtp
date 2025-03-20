@@ -69,8 +69,84 @@ NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientCon
 > get client info
 if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
 
+> useful for sync variable over the network
+> can be almost any kind of type
+> network variables need to be initialized exactly when they're created
+
+> we can initialize passing a default value and a bunch of different permissions:
+
+private NetworkVariable<PlayerType> _currentPlayablePlayerType = new NetworkVariable<PlayerType>(PlayerType.None,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        
+> where there were references, change to .value e.g. :
+
+_currentPlayablePlayerType.Value = PlayerType.Circle;
+
+> OnValueChanged delegate can do lots of cool stuff when having a value update
+
+CurrentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
+        {
+            OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
+        };
+
 ========================
-NETWORK VARIABLE
+NETWORK MANAGER UI
 ========================
 
 
+
+
+
+===============================================================>>>>>
+NOTES
+===============================================================>>>>>
+
+// gameobjects can be deactivated, dunno where matheus got that
+
+// first canvas for all will be a network manager UI
+// this onclientconnectedcallback is useful to replace the add button.
+// platform, stuff, managers and network will be in scene
+// host will spawn cassino manager UI which will update on server and be deactivated for all clients
+// client will spawn slotmachine on server when clientconnected is fired
+// when slot machine UI, SFX, VFX, Anim, etc, will be feeded based on server rpc calls
+// guess i could use this for jackpot value
+// also to check if bgm is already playing
+// inputs on ui buttons will trigger requisitions of functions via [Rpc(SendTo.ClientsAndHost)]
+
+tips:
+
+> dealing with deactivated game objects
+
+    State Synchronization:
+
+        When a game object is deactivated, it stops receiving updates and its state is no longer synchronized across the network. Reactivating the object later may result in it being out of sync with the rest of the game state unless proper measures are taken.
+
+    Visibility and Spawning:
+
+        Deactivated objects are not visible in the scene and are not spawned on clients. If you need to reactivate an object, you may need to manually handle its spawning and synchronization to ensure all clients see it correctly.
+
+    Network Identity:
+
+        Each networked object has a NetworkIdentity component. If an object is deactivated, its NetworkIdentity is no longer active, which can cause issues if the object is reactivated without properly reinitializing its network state.
+
+    Event Handling:
+
+        Networked events and RPCs (Remote Procedure Calls) may not function correctly on deactivated objects. If an object is deactivated, it won't receive network messages, and any pending RPCs may be lost.
+
+    Object Pooling:
+
+        If you are using object pooling with networked objects, you need to ensure that objects are properly reset and reinitialized when they are reactivated. This includes resetting their network state and ensuring they are correctly registered with the network manager.
+
+    Client-Side Prediction:
+
+        If your game uses client-side prediction or interpolation, deactivated objects can cause issues because their state is not being updated. This can lead to visual glitches or inconsistencies when the object is reactivated.
+
+Best Practices:
+
+    Manual Synchronization: When reactivating a networked object, manually synchronize its state with the server to ensure consistency across all clients.
+
+    Reinitialize Network State: Ensure that the NetworkIdentity and other network-related components are properly reinitialized when the object is reactivated.
+
+    Use Object Pooling Carefully: If using object pooling, make sure to reset the network state of pooled objects before reactivating them.
+
+    Handle RPCs and Events: Ensure that any pending RPCs or network events are handled appropriately when reactivating objects.

@@ -43,7 +43,7 @@ public class PlayerUI : MonoBehaviour
 
     private void UpdateCurrentArrow()
     {
-        if (GameManager.Singleton.CurrentPlayablePlayerType == GameManager.PlayerType.Cross)
+        if (GameManager.Singleton.CurrentPlayablePlayerType.Value == GameManager.PlayerType.Cross)
         {
             _crossArrowIcon.SetActive(true);
             _circleArrowIcon.SetActive(false);
