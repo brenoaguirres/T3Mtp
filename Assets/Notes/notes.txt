@@ -93,8 +93,58 @@ CurrentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerTyp
 NETWORK MANAGER UI
 ========================
 
+> create buttons / ui to start host / client and disable it after click
 
+========================
+WINNER FUNCTIONS
+========================
 
+> for pure data containers (e.g. representing a line) use structs
+> its also ok to let all of their members public
+
+> list init syntax
+_lineList = new List<Line>
+        {
+            new Line
+            {
+                
+            }
+        };
+        
+> array init syntax
+private PlayerType[,] _playerTypeArray;
+_playerTypeArray = new PlayerType[3, 3];
+
+========================
+GAME OVER UI
+========================
+
+> In order to TriggerOnGameWinRpc() we need to serialize the line struct
+> For custom types we have to tell the compiler how to serialize them
+
+> we still won't be able to serialize, because SerializeValue can only serialize
+non-nullable types e.g.
+this won't do: public List<Vector2Int> _gridVector2IntList;
+
+public struct Line : INetworkSerializable
+    {
+        public List<Vector2Int> _gridVector2IntList;
+        public Vector2Int _centerGridPosition;
+        public Orientation _orientation;
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref _gridVector2IntList);
+            serializer.SerializeValue(ref _centerGridPosition);
+            serializer.SerializeValue(ref _orientation);
+        }
+    }
+    
+> so we'll use another solution by sending a lineIndex which will be an int telling the local instance
+which line to validate for
+
+TIP
+> sometimes its important to be clever and make assumptions on which type of data the server and
+client share
 
 
 ===============================================================>>>>>
