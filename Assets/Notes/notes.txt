@@ -59,5 +59,18 @@ PLAYERTYPES, LOCAL CLIENT ID
 > generally you can only pass value types to RPCS, to pass ref you need to network serialize the type.
 > you cannot also pass a NetworkObject but you do can pass a NetworkObjectReference type.
 
+========================
+PLAYERUI
+========================
+
+> you can use Rpc(SendTo.ClientsAndHost) to fire events to update all instances
+> useful to spawn on client connection
+NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+> get client info
+if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
+
+========================
+NETWORK VARIABLE
+========================
 
 

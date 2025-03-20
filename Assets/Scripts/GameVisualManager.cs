@@ -16,16 +16,12 @@ public class GameVisualManager : NetworkBehaviour
 
     private void GameManager_OnClickedOnGridPosition(object sender, GameManager.OnClickedOnGridPositionEventArgs e)
     {
-        //Debug.Log("GameManager_OnClickedOnGridPosition");
-        //Debug.Log(GameManager.Singleton.LocalPlayerType);
-        SpawnObjectRpc(GameManager.Singleton.LocalPlayerType, e.x, e.y);
+        SpawnObjectRpc(e.type, e.x, e.y);
     }
 
     [Rpc(SendTo.Server)]
     private void SpawnObjectRpc(GameManager.PlayerType type, int x, int y)
     {
-        //Debug.Log("SpawnObject");
-        //Debug.Log(type);
         Transform prefab;
         switch (type)
         {
@@ -39,7 +35,6 @@ public class GameVisualManager : NetworkBehaviour
         }
         Transform spawnedCrossTransform = Instantiate(prefab, GetGridWorldPosition(x, y), Quaternion.identity);
         spawnedCrossTransform.GetComponent<NetworkObject>().Spawn(true);
-        //spawnedCrossTransform.position = GetGridWorldPosition(x, y);
     }
 
     private Vector3 GetGridWorldPosition(int x, int y)

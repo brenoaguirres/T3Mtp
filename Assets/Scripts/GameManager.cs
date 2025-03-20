@@ -9,9 +9,12 @@ public class GameManager : NetworkBehaviour
     public event EventHandler<OnClickedOnGridPositionEventArgs> OnClickedOnGridPosition;
     public class OnClickedOnGridPositionEventArgs : EventArgs
     {
+        public PlayerType type;
         public int x;
         public int y;
     }
+    public event EventHandler OnGameStarted;
+    public event EventHandler OnCurrentPlayablePlayerTypeChanged;
 
     public enum PlayerType
     {
@@ -40,7 +43,6 @@ public class GameManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        //Debug.Log(NetworkManager.Singleton.LocalClientId);
         if (NetworkManager.Singleton.LocalClientId == 0)
         {
             _localPlayerType = PlayerType.Cross;
@@ -53,17 +55,37 @@ public class GameManager : NetworkBehaviour
         if (IsServer)
         {
             _currentPlayablePlayerType = PlayerType.Cross;
+
+            NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         }
+    }
+
+    public void NetworkManager_OnClientConnectedCallback(ulong obj)
+    {
+        if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
+            TriggerOnGameStartedRpc();
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerOnGameStartedRpc()
+    {
+        OnGameStarted?.Invoke(this, EventArgs.Empty);
+    }
+    
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerOnCurrentPlayablePlayerTypeChangeRpc()
+    {
+        OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
     }
     
     [Rpc(SendTo.Server)]
     public void ClickedOnGridPositionRpc(PlayerType type, int x, int y)
     {
-        //Debug.Log("ClickedOnGridPosition " + x + ", " + y);
         if (type != CurrentPlayablePlayerType) return;
         
         OnClickedOnGridPosition?.Invoke(this, new OnClickedOnGridPositionEventArgs
         {
+            type = type,
             x = x,
             y = y,
         });
@@ -78,5 +100,7 @@ public class GameManager : NetworkBehaviour
                 _currentPlayablePlayerType = PlayerType.Circle;
                 break;
         }
+        
+        TriggerOnCurrentPlayablePlayerTypeChangeRpc();
     }
 }
